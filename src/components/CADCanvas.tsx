@@ -20,7 +20,8 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     parameters, 
     material,
     renderQuality,
-    simulationResults 
+    simulationResults,
+    getParameterValue
   } = useModelContext();
 
   // Clean up the scene before adding new objects
@@ -178,11 +179,11 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     const group = new THREE.Group();
     
     // Extract parameters
-    const diameter = parameters.diameter || 30;
-    const faceWidth = parameters.faceWidth || 10;
-    const teethCount = parameters.teeth || 20;
-    const showHoles = parameters.showHoles !== undefined ? parameters.showHoles : true;
-    const holeCount = parameters.holeCount || 6;
+    const diameter = getParameterValue('diameter') as number;
+    const faceWidth = getParameterValue('faceWidth') as number;
+    const teethCount = getParameterValue('teeth') as number;
+    const showHoles = getParameterValue('showHoles') as boolean;
+    const holeCount = getParameterValue('holeCount') as number;
     
     // Scale factors for visual representation
     const radiusScale = diameter / 30; // Base 30mm diameter
@@ -268,10 +269,10 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     const group = new THREE.Group();
     
     // Extract parameters
-    const diameter = parameters.diameter || 40;
-    const thickness = parameters.faceWidth || 15;
-    const holeCount = parameters.holeCount || 6;
-    const boltCircleDiameter = parameters.boltCircleDiameter || 30;
+    const diameter = getParameterValue('diameter') as number;
+    const thickness = getParameterValue('faceWidth') as number;
+    const holeCount = getParameterValue('holeCount') as number;
+    const boltCircleDiameter = getParameterValue('boltCircleDiameter') as number;
     
     // Scale factors
     const radiusScale = diameter / 40;
@@ -336,10 +337,10 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     const group = new THREE.Group();
     
     // Extract parameters
-    const width = parameters.width || 50;
-    const height = parameters.height || 40;
-    const thickness = parameters.thickness || 5;
-    const holeCount = parameters.holeCount || 4;
+    const width = getParameterValue('width') as number;
+    const height = getParameterValue('height') as number;
+    const thickness = getParameterValue('thickness') as number;
+    const holeCount = getParameterValue('holeCount') as number;
     
     // Scale factors
     const widthScale = width / 50;
@@ -418,11 +419,11 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     const group = new THREE.Group();
     
     // Extract parameters
-    const baseWidth = parameters.width || 60;
-    const baseLength = parameters.length || 60;
-    const baseHeight = parameters.baseHeight || 5;
-    const finCount = parameters.finCount || 12;
-    const finHeight = parameters.finHeight || 15;
+    const baseWidth = getParameterValue('width') as number;
+    const baseLength = getParameterValue('length') as number;
+    const baseHeight = getParameterValue('baseHeight') as number;
+    const finCount = getParameterValue('finCount') as number;
+    const finHeight = getParameterValue('finHeight') as number;
     
     // Scale factors
     const widthScale = baseWidth / 60;

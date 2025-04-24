@@ -35,6 +35,8 @@ interface ModelContextType {
   setRenderQuality: (quality: string) => void;
   simulationResults: SimulationResult | null;
   runSimulation: (type: string, settings: any) => void;
+  // Helper methods to get single number values from arrays
+  getParameterValue: (name: keyof ModelParameters) => number | boolean;
 }
 
 const defaultParameters: ModelParameters = {
@@ -69,6 +71,16 @@ export const ModelProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
+  const getParameterValue = (name: keyof ModelParameters): number | boolean => {
+    if (name === 'showHoles') return parameters.showHoles;
+    
+    const param = parameters[name];
+    if (Array.isArray(param) && param.length > 0) {
+      return param[0];
+    }
+    return 0; // Default fallback value
+  };
+
   const runSimulation = (type: string, settings: any) => {
     // Simulate a backend service call
     console.log(`Running ${type} simulation with settings:`, settings);
@@ -93,7 +105,8 @@ export const ModelProvider = ({ children }: { children: ReactNode }) => {
     renderQuality,
     setRenderQuality,
     simulationResults,
-    runSimulation
+    runSimulation,
+    getParameterValue
   };
 
   return <ModelContext.Provider value={value}>{children}</ModelContext.Provider>;
