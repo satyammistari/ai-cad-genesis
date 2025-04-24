@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
@@ -7,6 +8,7 @@ import ModelParameters from "@/components/ModelParameters";
 import DFMAPanel from "@/components/DFMAPanel";
 import SimulationPanel from "@/components/SimulationPanel";
 import WhatsNext from "@/components/WhatsNext";
+import ProjectKnowledge from "@/components/ProjectKnowledge";
 
 const Index = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -67,6 +69,9 @@ const Index = () => {
         
         {/* What's Next Section */}
         <WhatsNext />
+        
+        {/* Project Knowledge Section */}
+        <ProjectKnowledge />
         
         {/* Status section at the bottom */}
         {lastPrompt && (

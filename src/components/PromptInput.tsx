@@ -3,6 +3,12 @@ import { useState, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Code } from "lucide-react";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 interface PromptInputProps {
   onGenerate: (prompt: string) => void;
@@ -11,6 +17,7 @@ interface PromptInputProps {
 
 const PromptInput = ({ onGenerate, isGenerating }: PromptInputProps) => {
   const [prompt, setPrompt] = useState("");
+  const [showExamples, setShowExamples] = useState(false);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -21,6 +28,19 @@ const PromptInput = ({ onGenerate, isGenerating }: PromptInputProps) => {
     }
     
     onGenerate(prompt);
+  };
+
+  const promptExamples = [
+    "Design a 20-tooth spur gear with 10mm face width",
+    "Create a valve body with 1/2 inch inlet",
+    "Design a mounting bracket with 4 holes",
+    "Model a heat sink with 12 fins and 5mm base",
+    "Create a flange with 6 bolt holes on a 60mm bolt circle"
+  ];
+
+  const insertExample = (example: string) => {
+    setPrompt(example);
+    setShowExamples(false);
   };
 
   return (
@@ -65,9 +85,51 @@ const PromptInput = ({ onGenerate, isGenerating }: PromptInputProps) => {
         </Button>
       </div>
       
-      <div className="text-xs text-muted-foreground">
-        Try: "Create a valve body with 1/2 inch inlet" or "Design a mounting bracket with 4 holes"
+      <div className="flex justify-between items-center">
+        <div className="text-xs text-muted-foreground">
+          <HoverCard>
+            <HoverCardTrigger className="underline cursor-help">Prompt tips</HoverCardTrigger>
+            <HoverCardContent className="w-80">
+              <div className="space-y-2">
+                <h4 className="font-medium">Effective CAD Prompts</h4>
+                <ul className="text-xs space-y-1 list-disc pl-4">
+                  <li>Be specific about dimensions (mm, inches)</li>
+                  <li>Mention quantity of features (holes, fillets)</li>
+                  <li>Specify materials when relevant</li>
+                  <li>Include surface finishes if needed</li>
+                </ul>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+        </div>
+        <Button 
+          type="button" 
+          variant="ghost" 
+          size="sm" 
+          className="text-xs flex items-center"
+          onClick={() => setShowExamples(!showExamples)}
+        >
+          <Code className="h-3 w-3 mr-1" />
+          {showExamples ? "Hide examples" : "Show examples"}
+        </Button>
       </div>
+      
+      {showExamples && (
+        <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-md mt-1 border text-sm">
+          <div className="font-medium text-xs mb-2">Example prompts:</div>
+          <div className="space-y-2">
+            {promptExamples.map((example, i) => (
+              <div 
+                key={i} 
+                className="p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-sm"
+                onClick={() => insertExample(example)}
+              >
+                "{example}"
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </form>
   );
 };
