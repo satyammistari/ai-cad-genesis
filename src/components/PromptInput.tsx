@@ -1,9 +1,10 @@
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Code } from "lucide-react";
+import { Code, Lightbulb } from "lucide-react";
+import { useModelContext } from "@/context/ModelContext";
 import {
   HoverCard,
   HoverCardContent,
@@ -18,6 +19,7 @@ interface PromptInputProps {
 const PromptInput = ({ onGenerate, isGenerating }: PromptInputProps) => {
   const [prompt, setPrompt] = useState("");
   const [showExamples, setShowExamples] = useState(false);
+  const { setModelType, updateParameter } = useModelContext();
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -27,15 +29,98 @@ const PromptInput = ({ onGenerate, isGenerating }: PromptInputProps) => {
       return;
     }
     
+    // Process prompt to extract model information
+    processPrompt(prompt);
+    
+    // Pass to parent for generating
     onGenerate(prompt);
+  };
+
+  // Basic prompt processing to adjust model parameters based on input
+  const processPrompt = (input: string) => {
+    const lowerInput = input.toLowerCase();
+    
+    // Detect model type
+    if (lowerInput.includes("gear") || lowerInput.includes("tooth") || lowerInput.includes("teeth")) {
+      setModelType("spur-gear");
+      
+      // Extract teeth count if mentioned
+      const teethMatch = lowerInput.match(/(\d+)[\s-]*(tooth|teeth)/);
+      if (teethMatch && teethMatch[1]) {
+        updateParameter("teeth", [parseInt(teethMatch[1])]);
+      }
+      
+      // Extract diameter if mentioned (in mm)
+      const diameterMatch = lowerInput.match(/(\d+)[\s-]*(mm|millimeter|millimeters)?[\s-]*(diameter)/);
+      if (diameterMatch && diameterMatch[1]) {
+        updateParameter("diameter", [parseInt(diameterMatch[1])]);
+      }
+      
+      // Extract face width if mentioned
+      const faceWidthMatch = lowerInput.match(/(\d+)[\s-]*(mm|millimeter|millimeters)?[\s-]*(face width|width)/);
+      if (faceWidthMatch && faceWidthMatch[1]) {
+        updateParameter("faceWidth", [parseInt(faceWidthMatch[1])]);
+      }
+    } 
+    else if (lowerInput.includes("coupling") || lowerInput.includes("flange")) {
+      setModelType("flanged-coupling");
+      
+      // Extract diameter if mentioned
+      const diameterMatch = lowerInput.match(/(\d+)[\s-]*(mm|millimeter|millimeters)?[\s-]*(diameter)/);
+      if (diameterMatch && diameterMatch[1]) {
+        updateParameter("diameter", [parseInt(diameterMatch[1])]);
+      }
+      
+      // Extract bolt hole count if mentioned
+      const holeMatch = lowerInput.match(/(\d+)[\s-]*(bolt|hole|holes)/);
+      if (holeMatch && holeMatch[1]) {
+        updateParameter("holeCount", [parseInt(holeMatch[1])]);
+      }
+    }
+    else if (lowerInput.includes("bracket") || lowerInput.includes("mount")) {
+      setModelType("mounting-bracket");
+      
+      // Extract width if mentioned
+      const widthMatch = lowerInput.match(/(\d+)[\s-]*(mm|millimeter|millimeters)?[\s-]*(width|wide)/);
+      if (widthMatch && widthMatch[1]) {
+        updateParameter("width", [parseInt(widthMatch[1])]);
+      }
+      
+      // Extract height if mentioned
+      const heightMatch = lowerInput.match(/(\d+)[\s-]*(mm|millimeter|millimeters)?[\s-]*(height|high)/);
+      if (heightMatch && heightMatch[1]) {
+        updateParameter("height", [parseInt(heightMatch[1])]);
+      }
+      
+      // Extract hole count if mentioned
+      const holeMatch = lowerInput.match(/(\d+)[\s-]*(hole|holes)/);
+      if (holeMatch && holeMatch[1]) {
+        updateParameter("holeCount", [parseInt(holeMatch[1])]);
+      }
+    }
+    else if (lowerInput.includes("heat sink") || lowerInput.includes("heatsink") || lowerInput.includes("cooler")) {
+      setModelType("heat-sink");
+      
+      // Extract fin count if mentioned
+      const finMatch = lowerInput.match(/(\d+)[\s-]*(fin|fins)/);
+      if (finMatch && finMatch[1]) {
+        updateParameter("finCount", [parseInt(finMatch[1])]);
+      }
+      
+      // Extract base dimensions if mentioned
+      const baseMatch = lowerInput.match(/(\d+)[\s-]*(mm|millimeter|millimeters)?[\s-]*(base)/);
+      if (baseMatch && baseMatch[1]) {
+        updateParameter("baseHeight", [parseInt(baseMatch[1])]);
+      }
+    }
   };
 
   const promptExamples = [
     "Design a 20-tooth spur gear with 10mm face width",
-    "Create a valve body with 1/2 inch inlet",
-    "Design a mounting bracket with 4 holes",
+    "Create a flanged coupling with 6 bolt holes on a 60mm bolt circle",
+    "Design a mounting bracket with 4 holes and 50mm width",
     "Model a heat sink with 12 fins and 5mm base",
-    "Create a flange with 6 bolt holes on a 60mm bolt circle"
+    "Create a 30mm diameter gear with 24 teeth"
   ];
 
   const insertExample = (example: string) => {
@@ -86,17 +171,20 @@ const PromptInput = ({ onGenerate, isGenerating }: PromptInputProps) => {
       </div>
       
       <div className="flex justify-between items-center">
-        <div className="text-xs text-muted-foreground">
+        <div className="text-xs text-muted-foreground flex items-center">
           <HoverCard>
-            <HoverCardTrigger className="underline cursor-help">Prompt tips</HoverCardTrigger>
+            <HoverCardTrigger className="underline cursor-help flex items-center">
+              <Lightbulb className="h-3 w-3 mr-1" />
+              Prompt tips
+            </HoverCardTrigger>
             <HoverCardContent className="w-80">
               <div className="space-y-2">
                 <h4 className="font-medium">Effective CAD Prompts</h4>
                 <ul className="text-xs space-y-1 list-disc pl-4">
-                  <li>Be specific about dimensions (mm, inches)</li>
-                  <li>Mention quantity of features (holes, fillets)</li>
-                  <li>Specify materials when relevant</li>
-                  <li>Include surface finishes if needed</li>
+                  <li>Specify the model type (gear, bracket, etc.)</li>
+                  <li>Include dimensions with units (e.g., 30mm diameter)</li>
+                  <li>Mention quantity of features (20 teeth, 6 holes)</li>
+                  <li>Add material preferences when needed</li>
                 </ul>
               </div>
             </HoverCardContent>

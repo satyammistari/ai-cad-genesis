@@ -1,7 +1,8 @@
-
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import * as THREE from "three";
 import { useModelContext } from "@/context/ModelContext";
+import { ZoomIn, ZoomOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface CADCanvasProps {
   isGenerating: boolean;
@@ -14,6 +15,7 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const modelRef = useRef<THREE.Group | null>(null);
   const loadingRef = useRef<THREE.Mesh | null>(null);
+  const [zoomLevel, setZoomLevel] = useState<number>(5);
 
   const { 
     modelType, 
@@ -32,6 +34,26 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     }
   };
 
+  // Handle zoom in/out
+  const handleZoomIn = () => {
+    if (cameraRef.current && zoomLevel > 2) {
+      setZoomLevel(prev => Math.max(2, prev - 1));
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (cameraRef.current && zoomLevel < 10) {
+      setZoomLevel(prev => Math.min(10, prev + 1));
+    }
+  };
+
+  // Update camera position when zoom level changes
+  useEffect(() => {
+    if (cameraRef.current) {
+      cameraRef.current.position.z = zoomLevel;
+    }
+  }, [zoomLevel]);
+
   // Initial setup of three.js scene
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -48,7 +70,7 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
       0.1,
       1000
     );
-    camera.position.z = 5;
+    camera.position.z = zoomLevel;
     camera.position.y = 1;
     cameraRef.current = camera;
 
@@ -72,6 +94,38 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     const gridHelper = new THREE.GridHelper(10, 10);
     scene.add(gridHelper);
 
+    // Add rotation controls
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+
+    const handleMouseDown = (e: MouseEvent) => {
+      isDragging = true;
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging || !modelRef.current) return;
+      
+      const deltaMove = {
+        x: e.clientX - previousMousePosition.x,
+        y: e.clientY - previousMousePosition.y
+      };
+
+      modelRef.current.rotation.y += deltaMove.x * 0.01;
+      modelRef.current.rotation.x += deltaMove.y * 0.01;
+      
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    };
+
+    const handleMouseUp = () => {
+      isDragging = false;
+    };
+
+    // Add event listeners for rotation
+    canvasRef.current.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
     // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
@@ -85,7 +139,9 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
         modelRef.current.rotation.z += 0.002;
       }
       
-      renderer.render(scene, camera);
+      if (rendererRef.current && sceneRef.current && cameraRef.current) {
+        rendererRef.current.render(sceneRef.current, cameraRef.current);
+      }
     };
     
     animate();
@@ -107,6 +163,9 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      canvasRef.current?.removeEventListener('mousedown', handleMouseDown);
       canvasRef.current?.removeChild(rendererRef.current!.domElement);
       rendererRef.current?.dispose();
     };
@@ -576,12 +635,41 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
   };
 
   return (
-    <div ref={canvasRef} className="w-full h-full model-canvas bg-cad-lightGray dark:bg-cad-gray rounded-lg shadow-inner relative">
-      {isGenerating && (
-        <div className="absolute inset-0 flex items-center justify-center text-primary/70 text-lg font-medium">
-          Generating 3D Model...
-        </div>
-      )}
+    <div className="relative w-full h-full">
+      <div ref={canvasRef} className="w-full h-full model-canvas bg-cad-lightGray dark:bg-cad-gray rounded-lg shadow-inner relative">
+        {isGenerating && (
+          <div className="absolute inset-0 flex items-center justify-center text-primary/70 text-lg font-medium">
+            Generating 3D Model...
+          </div>
+        )}
+      </div>
+      
+      {/* Zoom controls */}
+      <div className="absolute top-4 right-4 flex flex-col gap-2">
+        <Button
+          size="icon"
+          variant="outline"
+          onClick={handleZoomIn}
+          className="bg-white/80 dark:bg-gray-800/80"
+          title="Zoom In"
+        >
+          <ZoomIn className="h-4 w-4" />
+        </Button>
+        <Button
+          size="icon"
+          variant="outline"
+          onClick={handleZoomOut}
+          className="bg-white/80 dark:bg-gray-800/80"
+          title="Zoom Out"
+        >
+          <ZoomOut className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Interaction instructions */}
+      <div className="absolute bottom-4 left-4 text-xs bg-white/70 dark:bg-gray-800/70 px-3 py-2 rounded-md text-gray-600 dark:text-gray-300">
+        Drag to rotate | Use buttons to zoom
+      </div>
     </div>
   );
 };
