@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
@@ -7,6 +6,7 @@ import PromptInput from "@/components/PromptInput";
 import ModelParameters from "@/components/ModelParameters";
 import DFMAPanel from "@/components/DFMAPanel";
 import SimulationPanel from "@/components/SimulationPanel";
+import WhatsNext from "@/components/WhatsNext";
 
 const Index = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -48,7 +48,7 @@ const Index = () => {
         </div>
         
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* 3D Viewer - Takes up 2 columns on large screens */}
           <div className="lg:col-span-2 h-[500px] md:h-[600px]">
             <CADCanvas isGenerating={isGenerating} />
@@ -64,6 +64,9 @@ const Index = () => {
             </div>
           </div>
         </div>
+        
+        {/* What's Next Section */}
+        <WhatsNext />
         
         {/* Status section at the bottom */}
         {lastPrompt && (
