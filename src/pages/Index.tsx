@@ -1,12 +1,82 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { useState } from "react";
+import { toast } from "sonner";
+import Header from "@/components/Header";
+import CADCanvas from "@/components/CADCanvas";
+import PromptInput from "@/components/PromptInput";
+import ModelParameters from "@/components/ModelParameters";
+import DFMAPanel from "@/components/DFMAPanel";
+import SimulationPanel from "@/components/SimulationPanel";
 
 const Index = () => {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedModel, setGeneratedModel] = useState(null);
+  const [lastPrompt, setLastPrompt] = useState("");
+
+  const generateModel = async (prompt: string) => {
+    setIsGenerating(true);
+    setLastPrompt(prompt);
+    
+    // Simulate API call to AI model generation service
+    try {
+      // In a real implementation, this would be an API call to a backend service
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      toast.success("Model generated successfully", {
+        description: "Your CAD model is ready to view and modify"
+      });
+      
+      // Set the generated model data
+      setGeneratedModel({} as any); // In a real app, this would contain actual model data
+    } catch (error) {
+      toast.error("Failed to generate model", {
+        description: "Please try again with a different prompt"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Header />
+      
+      <main className="flex-1 container mx-auto px-4 py-6">
+        {/* Prompt Input Section */}
+        <div className="mb-6">
+          <PromptInput onGenerate={generateModel} isGenerating={isGenerating} />
+        </div>
+        
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* 3D Viewer - Takes up 2 columns on large screens */}
+          <div className="lg:col-span-2 h-[500px] md:h-[600px]">
+            <CADCanvas isGenerating={isGenerating} />
+          </div>
+          
+          {/* Sidebar panels - Takes up 1 column */}
+          <div className="space-y-6">
+            <ModelParameters />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
+              <DFMAPanel />
+              <SimulationPanel />
+            </div>
+          </div>
+        </div>
+        
+        {/* Status section at the bottom */}
+        {lastPrompt && (
+          <div className="mt-6 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+            <h3 className="text-sm font-medium mb-1">Last Prompt:</h3>
+            <p className="text-sm text-muted-foreground">"{lastPrompt}"</p>
+          </div>
+        )}
+      </main>
+      
+      <footer className="py-4 px-6 border-t border-gray-200 dark:border-gray-800 text-center text-sm text-muted-foreground">
+        AI-CAD Genesis &copy; {new Date().getFullYear()} - Powered by AI
+      </footer>
     </div>
   );
 };
