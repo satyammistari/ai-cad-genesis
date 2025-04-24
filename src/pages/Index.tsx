@@ -9,6 +9,7 @@ import DFMAPanel from "@/components/DFMAPanel";
 import SimulationPanel from "@/components/SimulationPanel";
 import WhatsNext from "@/components/WhatsNext";
 import ProjectKnowledge from "@/components/ProjectKnowledge";
+import { ModelProvider } from "@/context/ModelContext";
 
 const Index = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -40,52 +41,54 @@ const Index = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header />
-      
-      <main className="flex-1 container mx-auto px-4 py-6">
-        {/* Prompt Input Section */}
-        <div className="mb-6">
-          <PromptInput onGenerate={generateModel} isGenerating={isGenerating} />
-        </div>
+    <ModelProvider>
+      <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Header />
         
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* 3D Viewer - Takes up 2 columns on large screens */}
-          <div className="lg:col-span-2 h-[500px] md:h-[600px]">
-            <CADCanvas isGenerating={isGenerating} />
+        <main className="flex-1 container mx-auto px-4 py-6">
+          {/* Prompt Input Section */}
+          <div className="mb-6">
+            <PromptInput onGenerate={generateModel} isGenerating={isGenerating} />
           </div>
           
-          {/* Sidebar panels - Takes up 1 column */}
-          <div className="space-y-6">
-            <ModelParameters />
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            {/* 3D Viewer - Takes up 2 columns on large screens */}
+            <div className="lg:col-span-2 h-[500px] md:h-[600px]">
+              <CADCanvas isGenerating={isGenerating} />
+            </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
-              <DFMAPanel />
-              <SimulationPanel />
+            {/* Sidebar panels - Takes up 1 column */}
+            <div className="space-y-6">
+              <ModelParameters />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
+                <DFMAPanel />
+                <SimulationPanel />
+              </div>
             </div>
           </div>
-        </div>
+          
+          {/* What's Next Section */}
+          <WhatsNext />
+          
+          {/* Project Knowledge Section */}
+          <ProjectKnowledge />
+          
+          {/* Status section at the bottom */}
+          {lastPrompt && (
+            <div className="mt-6 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+              <h3 className="text-sm font-medium mb-1">Last Prompt:</h3>
+              <p className="text-sm text-muted-foreground">"{lastPrompt}"</p>
+            </div>
+          )}
+        </main>
         
-        {/* What's Next Section */}
-        <WhatsNext />
-        
-        {/* Project Knowledge Section */}
-        <ProjectKnowledge />
-        
-        {/* Status section at the bottom */}
-        {lastPrompt && (
-          <div className="mt-6 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-            <h3 className="text-sm font-medium mb-1">Last Prompt:</h3>
-            <p className="text-sm text-muted-foreground">"{lastPrompt}"</p>
-          </div>
-        )}
-      </main>
-      
-      <footer className="py-4 px-6 border-t border-gray-200 dark:border-gray-800 text-center text-sm text-muted-foreground">
-        AI-CAD Genesis &copy; {new Date().getFullYear()} - Powered by AI
-      </footer>
-    </div>
+        <footer className="py-4 px-6 border-t border-gray-200 dark:border-gray-800 text-center text-sm text-muted-foreground">
+          AI-CAD Genesis &copy; {new Date().getFullYear()} - Powered by AI
+        </footer>
+      </div>
+    </ModelProvider>
   );
 };
 
