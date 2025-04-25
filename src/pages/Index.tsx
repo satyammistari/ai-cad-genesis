@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import CADCanvas from "@/components/CADCanvas";
 import PromptInput from "@/components/PromptInput";
@@ -10,6 +11,8 @@ import SimulationPanel from "@/components/SimulationPanel";
 import WhatsNext from "@/components/WhatsNext";
 import ProjectKnowledge from "@/components/ProjectKnowledge";
 import { ModelProvider, useModelContext } from "@/context/ModelContext";
+import { Button } from "@/components/ui/button";
+import { FileText, Users } from "lucide-react";
 
 const MainContent = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -42,6 +45,22 @@ const MainContent = () => {
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-6">
+        {/* Quick Access Bar */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          <Button asChild variant="outline">
+            <Link to="/templates">
+              <FileText className="mr-2 h-4 w-4" />
+              Browse Templates
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/collaboration">
+              <Users className="mr-2 h-4 w-4" />
+              Collaboration Projects
+            </Link>
+          </Button>
+        </div>
+        
         {/* Prompt Input Section */}
         <div className="mb-6">
           <PromptInput onGenerate={generateModel} isGenerating={isGenerating} />
