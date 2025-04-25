@@ -12,7 +12,7 @@ import WhatsNext from "@/components/WhatsNext";
 import ProjectKnowledge from "@/components/ProjectKnowledge";
 import { ModelProvider, useModelContext } from "@/context/ModelContext";
 import { Button } from "@/components/ui/button";
-import { FileText, Users, Layout } from "lucide-react";
+import { FileText, Users, Layout, Sparkles } from "lucide-react";
 
 const MainContent = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -51,8 +51,27 @@ const MainContent = () => {
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-6">
+        {/* Hero section */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-extrabold tracking-tight mb-4">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-teal-500">
+              AI-Powered CAD
+            </span>
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Design complex 3D models and assemblies with natural language. 
+            No CAD experience required.
+          </p>
+        </div>
+        
         {/* Quick Access Bar */}
-        <div className="flex flex-wrap gap-3 mb-6">
+        <div className="flex flex-wrap gap-3 mb-6 justify-center">
+          <Button asChild>
+            <Link to="/design">
+              <Sparkles className="mr-2 h-4 w-4" />
+              Start Designing
+            </Link>
+          </Button>
           <Button asChild variant="outline">
             <Link to="/templates">
               <FileText className="mr-2 h-4 w-4" />
@@ -92,6 +111,37 @@ const MainContent = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
               <DFMAPanel />
               <SimulationPanel />
+            </div>
+          </div>
+        </div>
+        
+        {/* Feature Highlights */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-6 text-center">Key Features</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border">
+              <h3 className="text-lg font-medium mb-2">🧠 AI-Native Modeling</h3>
+              <p className="text-sm text-muted-foreground">Generate complex 3D parts and assemblies from natural language descriptions with parametric controls.</p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border">
+              <h3 className="text-lg font-medium mb-2">🖼️ Fully Editable Models</h3>
+              <p className="text-sm text-muted-foreground">Modify parameters, apply features like fillets or chamfers, and see changes reflected instantly.</p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border">
+              <h3 className="text-lg font-medium mb-2">🧪 Built-in Simulation</h3>
+              <p className="text-sm text-muted-foreground">Run stress, thermal, and flow analyses with AI-assisted setup of boundary conditions.</p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border">
+              <h3 className="text-lg font-medium mb-2">📦 Smart Assemblies</h3>
+              <p className="text-sm text-muted-foreground">Auto-align parts, create constraints, and build complex mechanisms with intuitive controls.</p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border">
+              <h3 className="text-lg font-medium mb-2">🧠 DFMA Support</h3>
+              <p className="text-sm text-muted-foreground">Get AI feedback on manufacturability including draft angles, thin walls, and undercuts.</p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border">
+              <h3 className="text-lg font-medium mb-2">📄 Auto Documentation</h3>
+              <p className="text-sm text-muted-foreground">Generate technical drawings, BOMs, and export to industry-standard formats like STEP and STL.</p>
             </div>
           </div>
         </div>

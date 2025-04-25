@@ -6,13 +6,13 @@ import CADCanvas from "@/components/CADCanvas";
 import ModelParameters from "@/components/ModelParameters";
 import DFMAPanel from "@/components/DFMAPanel";
 import SimulationPanel from "@/components/SimulationPanel";
+import AIPromptGenerator from "@/components/AIPromptGenerator";
 import { ModelProvider, useModelContext } from "@/context/ModelContext";
 import { Button } from "@/components/ui/button";
 import {
   Save,
   Share,
   Users,
-  Layout,
   Download,
   FileText,
 } from "lucide-react";
@@ -23,16 +23,13 @@ const DesignContent = () => {
   const [searchParams] = useSearchParams();
   const templateId = searchParams.get("template");
   const { toast } = useToast();
-  const { modelType, setModelType } = useModelContext();
+  const { modelType, setModelType, designHistory, isGenerating } = useModelContext();
   const [isLoading, setIsLoading] = useState(true);
   
-  // Load template if provided in URL
   useEffect(() => {
     if (templateId) {
       setIsLoading(true);
-      // Simulate loading a template
       setTimeout(() => {
-        // Set model type based on the template
         switch (templateId) {
           case "spur-gear-standard":
             setModelType("spur-gear");
@@ -86,7 +83,6 @@ const DesignContent = () => {
       description: `Exporting as ${format}...`,
     });
     
-    // Simulate export
     setTimeout(() => {
       toast({
         title: "Export complete",
@@ -100,7 +96,6 @@ const DesignContent = () => {
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-4">
-        {/* Top action bar */}
         <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
           <h1 className="text-2xl font-bold">{modelType ? modelType.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : 'New Design'}</h1>
           
@@ -122,9 +117,9 @@ const DesignContent = () => {
           </div>
         </div>
         
-        {/* Main content */}
+        <AIPromptGenerator />
+        
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          {/* Left sidebar */}
           <div className="lg:col-span-1">
             <Tabs defaultValue="parameters" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
@@ -177,13 +172,12 @@ const DesignContent = () => {
             </Tabs>
           </div>
           
-          {/* Main CAD viewer */}
           <div className="lg:col-span-2 h-[600px] md:h-[700px] relative">
-            {isLoading ? (
+            {isLoading || isGenerating ? (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg">
                 <div className="flex flex-col items-center">
                   <div className="h-8 w-8 border-4 border-t-primary rounded-full animate-spin mb-4"></div>
-                  <p>Loading template...</p>
+                  <p>{isLoading ? "Loading template..." : "Generating model from prompt..."}</p>
                 </div>
               </div>
             ) : (
@@ -191,9 +185,8 @@ const DesignContent = () => {
             )}
           </div>
           
-          {/* Right sidebar */}
           <div className="lg:col-span-1">
-            <Tabs defaultValue="simulation" className="w-full">
+            <Tabs defaultValue="history" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="simulation">Simulation</TabsTrigger>
                 <TabsTrigger value="history">History</TabsTrigger>
@@ -208,21 +201,16 @@ const DesignContent = () => {
                   <CardHeader className="pb-3">
                     <CardTitle>Design History</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="border-l-2 border-gray-200 dark:border-gray-700 pl-4 py-1">
-                        <p className="text-sm font-medium">Model Created</p>
-                        <p className="text-xs text-gray-500">{new Date().toLocaleTimeString()}</p>
+                  <CardContent className="space-y-4 max-h-[400px] overflow-y-auto">
+                    {designHistory.slice().reverse().map((entry, index) => (
+                      <div 
+                        key={index} 
+                        className={`border-l-2 ${index === 0 ? 'border-primary' : 'border-gray-200 dark:border-gray-700'} pl-4 py-1`}
+                      >
+                        <p className="text-sm font-medium">{entry.action}</p>
+                        <p className="text-xs text-gray-500">{entry.timestamp.toLocaleTimeString()}</p>
                       </div>
-                      <div className="border-l-2 border-gray-200 dark:border-gray-700 pl-4 py-1">
-                        <p className="text-sm font-medium">Parameters Updated</p>
-                        <p className="text-xs text-gray-500">{new Date().toLocaleTimeString()}</p>
-                      </div>
-                      <div className="border-l-2 border-primary pl-4 py-1">
-                        <p className="text-sm font-medium">Current Version</p>
-                        <p className="text-xs text-gray-500">{new Date().toLocaleTimeString()}</p>
-                      </div>
-                    </div>
+                    ))}
                   </CardContent>
                 </Card>
               </TabsContent>

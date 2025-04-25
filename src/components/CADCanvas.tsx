@@ -23,10 +23,12 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     material,
     renderQuality,
     simulationResults,
-    getParameterValue
+    getParameterValue,
+    isGenerating: contextIsGenerating,
   } = useModelContext();
 
-  // Clean up the scene before adding new objects
+  const effectiveIsGenerating = isGenerating || contextIsGenerating;
+
   const cleanupScene = () => {
     if (sceneRef.current && modelRef.current) {
       sceneRef.current.remove(modelRef.current);
@@ -34,7 +36,6 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     }
   };
 
-  // Handle zoom in/out
   const handleZoomIn = () => {
     if (cameraRef.current && zoomLevel > 2) {
       setZoomLevel(prev => Math.max(2, prev - 1));
@@ -47,23 +48,19 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     }
   };
 
-  // Update camera position when zoom level changes
   useEffect(() => {
     if (cameraRef.current) {
       cameraRef.current.position.z = zoomLevel;
     }
   }, [zoomLevel]);
 
-  // Initial setup of three.js scene
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // Setup scene
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf5f7fa);
     sceneRef.current = scene;
 
-    // Setup camera
     const camera = new THREE.PerspectiveCamera(
       75,
       canvasRef.current.clientWidth / canvasRef.current.clientHeight,
@@ -74,14 +71,12 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     camera.position.y = 1;
     cameraRef.current = camera;
 
-    // Setup renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
     renderer.shadowMap.enabled = true;
     canvasRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // Add lights
     const ambientLight = new THREE.AmbientLight(0x404040, 2);
     scene.add(ambientLight);
 
@@ -90,11 +85,9 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     directionalLight.castShadow = true;
     scene.add(directionalLight);
 
-    // Add a grid helper
     const gridHelper = new THREE.GridHelper(10, 10);
     scene.add(gridHelper);
 
-    // Add rotation controls
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
 
@@ -121,21 +114,19 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
       isDragging = false;
     };
 
-    // Add event listeners for rotation
     canvasRef.current.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
 
-    // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
       
-      if (isGenerating && loadingRef.current) {
+      if (effectiveIsGenerating && loadingRef.current) {
         loadingRef.current.rotation.x += 0.01;
         loadingRef.current.rotation.y += 0.01;
       }
       
-      if (!isGenerating && modelRef.current) {
+      if (!effectiveIsGenerating && modelRef.current) {
         modelRef.current.rotation.z += 0.002;
       }
       
@@ -146,7 +137,6 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     
     animate();
 
-    // Handle window resize
     const handleResize = () => {
       if (!canvasRef.current || !cameraRef.current || !rendererRef.current) return;
       
@@ -160,7 +150,6 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
 
     window.addEventListener('resize', handleResize);
 
-    // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
@@ -171,14 +160,12 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     };
   }, []);
 
-  // Update the 3D model when parameters change
   useEffect(() => {
-    if (!sceneRef.current || isGenerating) return;
+    if (!sceneRef.current || effectiveIsGenerating) return;
 
     cleanupScene();
 
-    // Create loading state spinner
-    if (isGenerating) {
+    if (effectiveIsGenerating) {
       const geometry = new THREE.BoxGeometry(1, 1, 1);
       const material = new THREE.MeshStandardMaterial({ 
         color: 0x3DD2C0, 
@@ -192,13 +179,11 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
       return;
     }
 
-    // Remove the loading cube if it exists
     if (loadingRef.current && sceneRef.current) {
       sceneRef.current.remove(loadingRef.current);
       loadingRef.current = null;
     }
 
-    // Create model based on modelType and parameters
     let model: THREE.Group;
     
     switch (modelType) {
@@ -214,48 +199,43 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
       case 'heat-sink':
         model = createHeatSink();
         break;
+      case 'gearbox-assembly':
+        model = createGearboxAssembly();
+        break;
       default:
         model = createSpurGear(); // Default to spur gear
     }
 
-    // Apply material based on user selection
     applyMaterialToModel(model, material);
     
-    // Apply simulation results visualization if available
     if (simulationResults && simulationResults.type) {
       applySimulationResults(model, simulationResults);
     }
 
-    // Add the model to the scene
-    model.rotation.x = Math.PI / 2; // Orient model flat
+    model.rotation.x = Math.PI / 2;
     sceneRef.current.add(model);
     modelRef.current = model;
+  }, [modelType, parameters, material, renderQuality, effectiveIsGenerating, simulationResults]);
 
-  }, [modelType, parameters, material, renderQuality, isGenerating, simulationResults]);
-
-  // Create a spur gear with customizable parameters
   const createSpurGear = () => {
     const group = new THREE.Group();
     
-    // Extract parameters
     const diameter = getParameterValue('diameter') as number;
     const faceWidth = getParameterValue('faceWidth') as number;
     const teethCount = getParameterValue('teeth') as number;
     const showHoles = getParameterValue('showHoles') as boolean;
     const holeCount = getParameterValue('holeCount') as number;
     
-    // Scale factors for visual representation
-    const radiusScale = diameter / 30; // Base 30mm diameter
-    const heightScale = faceWidth / 10; // Base 10mm face width
+    const radiusScale = diameter / 30;
+    const heightScale = faceWidth / 10;
     
-    // Create gear body
     const gearGeometry = new THREE.CylinderGeometry(
-      radiusScale, // top radius
-      radiusScale, // bottom radius
-      heightScale * 0.3, // height
-      Math.max(24, teethCount * 2), // radial segments (higher for better quality)
-      1, // height segments
-      false // open ended
+      radiusScale,
+      radiusScale,
+      heightScale * 0.3,
+      Math.max(24, teethCount * 2),
+      1,
+      false
     );
     
     const gearMaterial = new THREE.MeshStandardMaterial({ 
@@ -267,11 +247,9 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     const gearBody = new THREE.Mesh(gearGeometry, gearMaterial);
     group.add(gearBody);
     
-    // Add teeth
     for (let i = 0; i < teethCount; i++) {
       const angle = (i / teethCount) * Math.PI * 2;
       
-      // Teeth size relative to overall gear size
       const toothWidth = 0.2 * radiusScale;
       const toothHeight = 0.3 * heightScale;
       const toothLength = 0.4 * radiusScale;
@@ -286,7 +264,6 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
       group.add(tooth);
     }
     
-    // Add center hole
     const centerHoleRadius = 0.3 * radiusScale;
     const holeGeometry = new THREE.CylinderGeometry(
       centerHoleRadius, 
@@ -298,7 +275,6 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     const hole = new THREE.Mesh(holeGeometry, holeMaterial);
     group.add(hole);
     
-    // Add mounting holes if enabled
     if (showHoles && holeCount > 0) {
       const mountingHoleRadius = 0.15 * radiusScale;
       const mountingHoleDistance = 0.7 * radiusScale;
@@ -323,21 +299,17 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     return group;
   };
 
-  // Create a flanged coupling
   const createFlangedCoupling = () => {
     const group = new THREE.Group();
     
-    // Extract parameters
     const diameter = getParameterValue('diameter') as number;
     const thickness = getParameterValue('faceWidth') as number;
     const holeCount = getParameterValue('holeCount') as number;
     const boltCircleDiameter = getParameterValue('boltCircleDiameter') as number;
     
-    // Scale factors
     const radiusScale = diameter / 40;
     const thicknessScale = thickness / 15;
     
-    // Create flange body
     const flangeGeometry = new THREE.CylinderGeometry(
       radiusScale * 0.5 * diameter,
       radiusScale * 0.5 * diameter,
@@ -354,7 +326,6 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     const flange = new THREE.Mesh(flangeGeometry, flangeMaterial);
     group.add(flange);
     
-    // Add central hole
     const centerHoleGeometry = new THREE.CylinderGeometry(
       radiusScale * 0.2 * diameter,
       radiusScale * 0.2 * diameter,
@@ -366,7 +337,6 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     const centerHole = new THREE.Mesh(centerHoleGeometry, holeMaterial);
     group.add(centerHole);
     
-    // Add bolt holes
     if (holeCount > 0) {
       const boltCircleRadius = radiusScale * 0.5 * boltCircleDiameter;
       const boltHoleRadius = radiusScale * 0.05 * diameter;
@@ -391,22 +361,18 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     return group;
   };
 
-  // Create a mounting bracket
   const createMountingBracket = () => {
     const group = new THREE.Group();
     
-    // Extract parameters
     const width = getParameterValue('width') as number;
     const height = getParameterValue('height') as number;
     const thickness = getParameterValue('thickness') as number;
     const holeCount = getParameterValue('holeCount') as number;
     
-    // Scale factors
     const widthScale = width / 50;
     const heightScale = height / 40;
     const thicknessScale = thickness / 5;
     
-    // Create bracket base
     const baseGeometry = new THREE.BoxGeometry(
       widthScale * width,
       thicknessScale * thickness,
@@ -422,24 +388,21 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     const base = new THREE.Mesh(baseGeometry, bracketMaterial);
     group.add(base);
     
-    // Add mounting holes
     if (holeCount > 0) {
       const holeMaterial = new THREE.MeshStandardMaterial({ color: 0x303841 });
       const holeRadius = thicknessScale * thickness * 0.6;
       
-      // Calculate hole positions based on count
       const positions = [];
       
       if (holeCount === 1) {
-        positions.push([0, 0]); // Center
+        positions.push([0, 0]);
       } else if (holeCount === 2) {
-        positions.push([-0.3, 0], [0.3, 0]); // Two horizontally
+        positions.push([-0.3, 0], [0.3, 0]);
       } else if (holeCount === 3) {
-        positions.push([0, 0.3], [-0.3, -0.15], [0.3, -0.15]); // Triangle
+        positions.push([0, 0.3], [-0.3, -0.15], [0.3, -0.15]);
       } else if (holeCount === 4) {
-        positions.push([-0.3, 0.3], [0.3, 0.3], [-0.3, -0.3], [0.3, -0.3]); // Four corners
+        positions.push([-0.3, 0.3], [0.3, 0.3], [-0.3, -0.3], [0.3, -0.3]);
       } else {
-        // Distribute holes in a circular pattern for more than 4
         for (let i = 0; i < holeCount; i++) {
           const angle = (i / holeCount) * Math.PI * 2;
           positions.push([
@@ -449,7 +412,6 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
         }
       }
       
-      // Create holes at calculated positions
       positions.forEach(([x, z]) => {
         const holeGeometry = new THREE.CylinderGeometry(
           holeRadius,
@@ -459,7 +421,7 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
         );
         
         const hole = new THREE.Mesh(holeGeometry, holeMaterial);
-        hole.rotation.x = Math.PI / 2; // Orient cylinder for the hole
+        hole.rotation.x = Math.PI / 2;
         hole.position.set(
           x * widthScale * width,
           0,
@@ -473,23 +435,19 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     return group;
   };
 
-  // Create a heat sink
   const createHeatSink = () => {
     const group = new THREE.Group();
     
-    // Extract parameters
     const baseWidth = getParameterValue('width') as number;
     const baseLength = getParameterValue('length') as number;
     const baseHeight = getParameterValue('baseHeight') as number;
     const finCount = getParameterValue('finCount') as number;
     const finHeight = getParameterValue('finHeight') as number;
     
-    // Scale factors
     const widthScale = baseWidth / 60;
     const lengthScale = baseLength / 60;
     const heightScale = baseHeight / 5;
     
-    // Create base
     const baseGeometry = new THREE.BoxGeometry(
       widthScale * baseWidth,
       heightScale * baseHeight,
@@ -505,7 +463,6 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     const base = new THREE.Mesh(baseGeometry, heatSinkMaterial);
     group.add(base);
     
-    // Add fins
     if (finCount > 0) {
       const finThickness = 2 * widthScale;
       const finSpacing = (baseWidth - (finCount * finThickness)) / (finCount + 1);
@@ -520,7 +477,6 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
         
         const fin = new THREE.Mesh(finGeometry, heatSinkMaterial);
         
-        // Position the fin
         const xPos = -widthScale * baseWidth / 2 + (i + 1) * finSpacing + (i + 0.5) * finThickness;
         fin.position.set(
           xPos,
@@ -535,7 +491,91 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     return group;
   };
 
-  // Apply material to the model based on user selection
+  const createGearboxAssembly = () => {
+    const group = new THREE.Group();
+    
+    const teethCount = getParameterValue('teeth') as number;
+    const diameter = getParameterValue('diameter') as number;
+    
+    const baseGeometry = new THREE.BoxGeometry(diameter * 3, diameter * 0.2, diameter * 2);
+    const baseMaterial = new THREE.MeshStandardMaterial({ color: 0x909090 });
+    const base = new THREE.Mesh(baseGeometry, baseMaterial);
+    base.position.y = -diameter * 0.6;
+    group.add(base);
+    
+    const gear1 = createGear(diameter, teethCount, diameter * 0.2);
+    gear1.position.set(-diameter, 0, 0);
+    group.add(gear1);
+    
+    const gear2 = createGear(diameter * 1.5, Math.round(teethCount * 1.5), diameter * 0.2);
+    gear2.position.set(diameter * 0.75, 0, 0);
+    group.add(gear2);
+    
+    const shaft1Geometry = new THREE.CylinderGeometry(diameter * 0.1, diameter * 0.1, diameter * 1.5, 16);
+    const shaftMaterial = new THREE.MeshStandardMaterial({ color: 0x606060 });
+    const shaft1 = new THREE.Mesh(shaft1Geometry, shaftMaterial);
+    shaft1.rotation.x = Math.PI / 2;
+    shaft1.position.set(-diameter, -diameter * 0.3, 0);
+    group.add(shaft1);
+    
+    const shaft2Geometry = new THREE.CylinderGeometry(diameter * 0.15, diameter * 0.15, diameter * 1.5, 16);
+    const shaft2 = new THREE.Mesh(shaft2Geometry, shaftMaterial);
+    shaft2.rotation.x = Math.PI / 2;
+    shaft2.position.set(diameter * 0.75, -diameter * 0.3, 0);
+    group.add(shaft2);
+    
+    return group;
+  };
+
+  const createGear = (diameter: number, teethCount: number, thickness: number) => {
+    const gearGroup = new THREE.Group();
+    
+    const bodyGeometry = new THREE.CylinderGeometry(
+      diameter / 2,
+      diameter / 2,
+      thickness,
+      Math.max(24, teethCount * 2)
+    );
+    
+    const gearMaterial = new THREE.MeshStandardMaterial({
+      color: 0x0072CE,
+      metalness: 0.5,
+      roughness: 0.2
+    });
+    
+    const gearBody = new THREE.Mesh(bodyGeometry, gearMaterial);
+    gearGroup.add(gearBody);
+    
+    for (let i = 0; i < teethCount; i++) {
+      const angle = (i / teethCount) * Math.PI * 2;
+      
+      const toothWidth = 0.1 * diameter;
+      const toothHeight = thickness * 1.2;
+      const toothLength = 0.2 * diameter;
+      
+      const toothGeometry = new THREE.BoxGeometry(toothWidth, toothHeight, toothLength);
+      const tooth = new THREE.Mesh(toothGeometry, gearMaterial);
+      
+      tooth.position.x = Math.cos(angle) * (diameter / 2 * 1.2);
+      tooth.position.z = Math.sin(angle) * (diameter / 2 * 1.2);
+      tooth.rotation.y = angle;
+      
+      gearGroup.add(tooth);
+    }
+    
+    const holeGeometry = new THREE.CylinderGeometry(
+      diameter * 0.15,
+      diameter * 0.15,
+      thickness * 1.2,
+      16
+    );
+    const holeMaterial = new THREE.MeshStandardMaterial({ color: 0x303841 });
+    const hole = new THREE.Mesh(holeGeometry, holeMaterial);
+    gearGroup.add(hole);
+    
+    return gearGroup;
+  };
+
   const applyMaterialToModel = (model: THREE.Group, materialType: string) => {
     let materialProps: {color: number, metalness: number, roughness: number};
     
@@ -561,10 +601,8 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     
     const newMaterial = new THREE.MeshStandardMaterial(materialProps);
     
-    // Apply material to all meshes in the group (except holes)
     model.traverse((object) => {
       if (object instanceof THREE.Mesh) {
-        // Skip holes (typically darker colored)
         if (object.material instanceof THREE.MeshStandardMaterial && 
             object.material.color.getHex() !== 0x303841) {
           object.material = newMaterial;
@@ -573,11 +611,9 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     });
   };
 
-  // Apply simulation results visualization to the model
   const applySimulationResults = (model: THREE.Group, results: any) => {
     if (!results || !results.type) return;
     
-    // Get all non-hole meshes in the model
     const meshes: THREE.Mesh[] = [];
     model.traverse((object) => {
       if (object instanceof THREE.Mesh && 
@@ -591,7 +627,6 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
     
     switch (results.type) {
       case 'stress':
-        // Create a gradient from blue to red for stress visualization
         meshes.forEach(mesh => {
           const stressMaterial = new THREE.MeshStandardMaterial({
             color: 0xffff00,
@@ -605,7 +640,6 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
         break;
         
       case 'flow':
-        // Flow visualization using a blue color gradient
         meshes.forEach(mesh => {
           const flowMaterial = new THREE.MeshStandardMaterial({
             color: 0x0066ff,
@@ -619,7 +653,6 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
         break;
         
       case 'thermal':
-        // Thermal visualization using warm colors
         meshes.forEach(mesh => {
           const thermalMaterial = new THREE.MeshStandardMaterial({
             color: 0xff6600,
@@ -637,14 +670,13 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
   return (
     <div className="relative w-full h-full">
       <div ref={canvasRef} className="w-full h-full model-canvas bg-cad-lightGray dark:bg-cad-gray rounded-lg shadow-inner relative">
-        {isGenerating && (
+        {effectiveIsGenerating && (
           <div className="absolute inset-0 flex items-center justify-center text-primary/70 text-lg font-medium">
             Generating 3D Model...
           </div>
         )}
       </div>
       
-      {/* Zoom controls */}
       <div className="absolute top-4 right-4 flex flex-col gap-2">
         <Button
           size="icon"
@@ -666,7 +698,6 @@ const CADCanvas = ({ isGenerating }: CADCanvasProps) => {
         </Button>
       </div>
 
-      {/* Interaction instructions */}
       <div className="absolute bottom-4 left-4 text-xs bg-white/70 dark:bg-gray-800/70 px-3 py-2 rounded-md text-gray-600 dark:text-gray-300">
         Drag to rotate | Use buttons to zoom
       </div>
