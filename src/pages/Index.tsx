@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import CADCanvas from "@/components/CADCanvas";
 import PromptInput from "@/components/PromptInput";
@@ -12,12 +12,13 @@ import WhatsNext from "@/components/WhatsNext";
 import ProjectKnowledge from "@/components/ProjectKnowledge";
 import { ModelProvider, useModelContext } from "@/context/ModelContext";
 import { Button } from "@/components/ui/button";
-import { FileText, Users } from "lucide-react";
+import { FileText, Users, Layout } from "lucide-react";
 
 const MainContent = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastPrompt, setLastPrompt] = useState("");
   const { setModelType } = useModelContext();
+  const navigate = useNavigate();
 
   const generateModel = async (prompt: string) => {
     setIsGenerating(true);
@@ -31,6 +32,11 @@ const MainContent = () => {
       toast.success("Model generated successfully", {
         description: "Your CAD model is ready to view and modify"
       });
+      
+      // Navigate to design page after successful generation
+      setTimeout(() => {
+        navigate('/design');
+      }, 1000);
     } catch (error) {
       toast.error("Failed to generate model", {
         description: "Please try again with a different prompt"
@@ -57,6 +63,12 @@ const MainContent = () => {
             <Link to="/collaboration">
               <Users className="mr-2 h-4 w-4" />
               Collaboration Projects
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/design">
+              <Layout className="mr-2 h-4 w-4" />
+              Open Design Studio
             </Link>
           </Button>
         </div>
