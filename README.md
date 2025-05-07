@@ -1,73 +1,75 @@
-# Welcome to your Lovable project
+# 🚀 AI-CAD: Next-Gen AI-Powered CAD Platform
 
-## Project info
+> ✨ Build, simulate, and optimize mechanical designs using just your words.  
+> The future of mechanical CAD is here — AI-native, voice-enabled, and cloud-first.
 
-**URL**: https://lovable.dev/projects/508b5df4-a435-4c52-bca9-480642fdb881
+---
 
-## How can I edit this code?
 
-There are several ways of editing your application.
+## 🔧 What is AI-CAD?
 
-**Use Lovable**
+**AI-CAD** is an AI-powered 3D CAD platform designed to replace traditional software like SolidWorks or CATIA. It allows engineers to create, edit, simulate, and optimize models using simple text or voice prompts.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/508b5df4-a435-4c52-bca9-480642fdb881) and start prompting.
+> Example:  
+> _"Design a gearbox with 3 helical gears (20, 40, 60 teeth), aluminum housing, input shaft 10mm diameter"_  
+> → AI instantly generates the parametric 3D model, with full editability.
 
-Changes made via Lovable will be committed automatically to this repo.
+---
 
-**Use your preferred IDE**
+## 🧠 Key Features
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 🚀 Core
+- 💬 Prompt-to-Model AI: Generate 3D parts and assemblies via text or voice
+- 🖊️ Full Editability: Modify sketches, features, constraints like SolidWorks
+- 🧪 Built-in FEA/CFD: Simulate stress, heat, flow conditions
+- 🛠️ DFMA Checks: Manufacturability analysis with instant redesign options
+- 🧾 Auto-Generated Drawings & BoM
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 🌟 Innovative
+- 🎙️ Voice Control (“Siri for CAD”)
+- 🤝 Figma-Style Real-Time Collaboration
+- 🧠 AI Co-Designer & Optimizer
+- 🔍 Reverse Engineer from STEP/STL with prompt editing
+- 📦 Drag-to-Prompt Part Library with real vendor components
+- 📱 AR Viewer + Mobile Scan-to-CAD Reverse Engineering
 
-Follow these steps:
+---
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 🏗️ Tech Stack
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+| Layer         | Tech |
+|--------------|------|
+| CAD Kernel    | OpenCascade / Custom C++ Core |
+| AI Engine     | GPT-4, LangChain, Whisper (Voice) |
+| Frontend      | React, Three.js, TailwindCSS |
+| Backend       | FastAPI, Python, Node.js |
+| Simulation    | CalculiX / OpenFOAM |
+| File Support  | STEP, IGES, STL, DXF |
+| Hosting       | Railway, AWS, Vercel |
 
-# Step 3: Install the necessary dependencies.
-npm i
+---
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+## 📦 Repository Structure
 
-**Edit a file directly in GitHub**
+```bash
+.
+├── backend/           # FastAPI + AI model logic
+├── frontend/          # React + Three.js web app
+├── cad-core/          # Native CAD engine (C++ or Python bindings)
+├── models/            # AI prompt templates and training data
+├── simulations/       # FEA/CFD support scripts
+├── assets/            # Icons, logos, sample models
+├── docs/              # Design docs, whitepapers
+└── README.md
+# Clone repo
+git clone https://github.com/yourusername/ai-cad-platform.git && cd ai-cad-platform
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+# Start backend (FastAPI)
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/508b5df4-a435-4c52-bca9-480642fdb881) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+# Start frontend (React + Vite/Bun)
+cd frontend
+bun install
+bun dev
